@@ -53,7 +53,7 @@ namespace sabirov.telbot.db.Models
                 var user = db.telUsers.FirstOrDefault(x => x.ChatId == chatid);
                 if (user == null)
                 {
-                    await TelApi.SendMessage("Пройдите регистрацию! Вас нет в моей базе!", chatid);
+                    //await TelApi.SendMessage("Пройдите регистрацию! Вас нет в моей базе!", chatid);
                     return null;
                 }
                 db.SaveChanges();

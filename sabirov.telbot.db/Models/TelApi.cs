@@ -29,8 +29,6 @@ namespace sabirov.telbot.db.Models
             {
                 var msg = e.Message;
                 var user = await DBOperations.GetUser(msg.Chat.Username, msg.Chat.Id);
-                if (user == null)
-                    await SendMessage("Здравствуйте! Меня зовут Алексия! Рады познакомиться, давайте произведем регистрацию в системе", msg.Chat.Id);
                 switch (msg.Text)
                 {
                     case "Регистрация":
@@ -41,7 +39,6 @@ namespace sabirov.telbot.db.Models
                             return;
                           await SendMessage($"Ник:{user.Name}\nНомер чата:{user.ChatId}", msg.Chat.Id);
                           await SendPhoto(user.ChatId, DBOperations.ConvertPhotoStream(user.Photo));
-        
                         break;
                     case "Удалить":
                         if (user == null)
