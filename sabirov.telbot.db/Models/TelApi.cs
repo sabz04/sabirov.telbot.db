@@ -12,7 +12,7 @@ namespace sabirov.telbot.db.Models
     {
         private static TelegramBotClient client;
         private static string token = "5232226113:AAFSHMs4MCDMOmVGMDL1wGP6iZNjMNtIMvM";
-        public static long curId = 0;
+        
         public TelApi()
         {
             client = new TelegramBotClient(token);
@@ -23,14 +23,18 @@ namespace sabirov.telbot.db.Models
             using (TelUserContext db = new TelUserContext())
             {
                 var msg = e.Message;
-                curId = msg.Chat.Id;
+                
                 var user = db.telUsers.FirstOrDefault(x => x.Name == msg.Chat.Username);
                 if (user == null)
-                    await SendMessage("Здравствуйте! Меня зовут Алексия! Рады познакомиться, давайте произведем регистрацию в системе", curId);
+                    await SendMessage("Здравствуйте! Меня зовут Алексия! Рады познакомиться, давайте произведем регистрацию в системе", msg.Chat.Id);
                 switch (msg.Text)
                 {
                     case "Войти":
                         await DBOperations.AddUser(msg.Chat.Username, msg.Chat.Id);
+                        break;
+                    case "Инфо":
+                        var cUser = await DBOperations.GetUser(msg.Chat.Username, msg.Chat.Id);
+                        await SendMessage($"Ник:{cUser.Name}\nНомер чата:{cUser.ChatId}", msg.Chat.Id);
                         break;
                 }
             }
