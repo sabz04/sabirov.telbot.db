@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,23 +22,29 @@ namespace sabirov.telbot.db
     /// </summary>
     public partial class MainWindow : Window
     {
-        
+        string receiveStarus = "";
         public MainWindow()
         {
             InitializeComponent();
             new TelApi();
+            new Thread(x =>
+            {
+                while(true)
+                    receiveStarus = TelApi.IsReceiving().ToString();
+            }).Start();
+            isreceiveLB.Content = receiveStarus;
         }
 
         private void startBTN_Click(object sender, RoutedEventArgs e)
         {
             TelApi.BotActive(true);
-            isreceiveLB.Content = "active";
+            isreceiveLB.Content = receiveStarus;
         }
 
         private void stopBTN_Click(object sender, RoutedEventArgs e)
         {
             TelApi.BotActive(false);
-            isreceiveLB.Content = "off";
+            isreceiveLB.Content = receiveStarus;
         }
     }
 }
