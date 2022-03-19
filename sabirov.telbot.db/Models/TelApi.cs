@@ -23,7 +23,6 @@ namespace sabirov.telbot.db.Models
             using (TelUserContext db = new TelUserContext())
             {
                 var msg = e.Message;
-                
                 var user = db.telUsers.FirstOrDefault(x => x.Name == msg.Chat.Username);
                 if (user == null)
                     await SendMessage("Здравствуйте! Меня зовут Алексия! Рады познакомиться, давайте произведем регистрацию в системе", msg.Chat.Id);
@@ -33,8 +32,9 @@ namespace sabirov.telbot.db.Models
                         await DBOperations.AddUser(msg.Chat.Username, msg.Chat.Id);
                         break;
                     case "Инфо":
-                        var cUser = await DBOperations.GetUser(msg.Chat.Username, msg.Chat.Id);
-                        await SendMessage($"Ник:{cUser.Name}\nНомер чата:{cUser.ChatId}", msg.Chat.Id);
+                        var cUser =  await DBOperations.GetUser(msg.Chat.Username, msg.Chat.Id);
+                        if(cUser != null)
+                            await SendMessage($"Ник:{cUser.Name}\nНомер чата:{cUser.ChatId}", msg.Chat.Id);
                         break;
                 }
             }

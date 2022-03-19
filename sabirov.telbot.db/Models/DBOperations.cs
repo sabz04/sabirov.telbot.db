@@ -26,17 +26,17 @@ namespace sabirov.telbot.db.Models
                 db.SaveChanges();
             }
         }
-        public static TelUser GetUser(string username, long chatid)
+        public static async Task<TelUser> GetUser(string username, long chatid)
         {
             using (TelUserContext db = new TelUserContext())
             {
                 var user = db.telUsers.FirstOrDefault(x => x.Name == username);
                 if (user == null)
                 {
-                    TelApi.SendMessage("Пройдите регистрацию! Вас нет в моей базе!", chatid);
+                    await TelApi.SendMessage("Пройдите регистрацию! Вас нет в моей базе!", chatid);
                     return null;
                 }
-                TelApi.SendMessage("Пользователь найден!", chatid);
+                await TelApi.SendMessage("Пользователь найден!", chatid);
                 db.SaveChanges();
                 return user;
             }
