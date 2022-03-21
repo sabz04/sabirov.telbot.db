@@ -46,7 +46,7 @@ namespace sabirov.telbot.db.Models
                 db.SaveChanges();
             }
         }
-        public static async Task<TelUser> GetUser(string username, long chatid)
+        public static async Task<TelUser> GetUser(long chatid)
         {
             using (TelUserContext db = new TelUserContext())
             {
