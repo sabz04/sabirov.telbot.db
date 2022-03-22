@@ -10,10 +10,9 @@ namespace sabirov.telbot.db.Models
 {
     public class DBOperations
     {
-        public static async Task AddUser(string username, long chatid, string photo)
+        public static async Task AddUser(string username, long chatid, byte[] photo)
         {
-            var webClient = new WebClient();
-            byte[] imageBytes = webClient.DownloadData(photo);
+          
             using (TelUserContext db = new TelUserContext())
             {
                 var user = db.telUsers.FirstOrDefault(x => x.ChatId == chatid);
@@ -25,7 +24,7 @@ namespace sabirov.telbot.db.Models
                 {
                     Name = username,
                     ChatId = chatid,
-                    Photo = imageBytes
+                    Photo = photo
                 });
                 await TelApi.SendMessage("Регистрация успешна!", chatid);
                 db.SaveChanges();

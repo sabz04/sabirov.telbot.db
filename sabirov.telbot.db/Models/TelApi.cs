@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,7 +14,7 @@ namespace sabirov.telbot.db.Models
 {
     public class TelApi
     {
-        private static TelegramBotClient client;
+        private static ITelegramBotClient client;
         private static string token = "5232226113:AAFSHMs4MCDMOmVGMDL1wGP6iZNjMNtIMvM";
         public static List<string> userL = new List<string>();
         public static string name = "", photo = "";
@@ -44,7 +46,7 @@ namespace sabirov.telbot.db.Models
                             await SendMessage("Введите ник: ", e.Message.Chat.Id);
                             return;
                         }
-                        await DBOperations.AddUser(userL[1], int.Parse(userL[0]), userL[2]);
+                        await SendMessage("Вы уже зарегистрированы.", e.Message.Chat.Id);
                         break;
                     case "Инфо":
                         if (user == null)
@@ -56,10 +58,7 @@ namespace sabirov.telbot.db.Models
                         if (user == null)
                             return;
                         await DBOperations.RemoveUser(user.ChatId);
-                        name = "";
-                        photo = "";
-                        userL.Clear();
-                        userL = null;
+                        telUs = null;
                         break;
                     default:
                         await SendMessage("Не знаю такой команды...", msg.Chat.Id);
@@ -72,32 +71,51 @@ namespace sabirov.telbot.db.Models
         private static async void Client_OnMessage1(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
             
-            
-            if(telUs.Name == null)
+            if (telUs.Name == null)
             {
+                telUs.ChatId = e.Message.Chat.Id;
+                if (e.Message.Text == null) { await SendMessage("Извините, это не подходит, введите заново.", e.Message.Chat.Id); return; }
                 telUs.Name = e.Message.Text;
-                await SendMessage("Ссылку на фото: ", e.Message.Chat.Id);
+                await SendMessage("Оправьте фото: ", e.Message.Chat.Id);
                 return;
             }
-               
             if (telUs.Photo == null)
             {
-                var test = client.GetFileAsync(e.Message.Photo[e.Message.Photo.Count() - 1].FileId);
-                var download_url = $"https://api.telegram.org/file/bot<{token}>/" + test.Result.FilePath;
-                using (WebClient client = new WebClient())
-                {
-                    client.DownloadFile(new Uri(download_url), @"c:\temp\NewCompanyPicure.png");
+                if (e.Message.Photo == null) { await SendMessage("Извините, это не подходит, отправьте заново.", e.Message.Chat.Id); return; }
+                var test = await client.GetFileAsync(e.Message.Photo[e.Message.Photo.Count() - 1].FileId);
 
-                    byte[] imageBytes =client.DownloadData(download_url);
-                    telUs.Photo = imageBytes;
-                }
-
-                userL.Add(photo);
+                MemoryStream str = new MemoryStream();
+                await client.DownloadFileAsync(test.FilePath, str);
+                MemoryStream img = await RoundCorners(Image.FromStream(str),200);
+                
+                telUs.Photo = img.ToArray();
+                
             }
+            await DBOperations.AddUser(telUs.Name, telUs.ChatId, telUs.Photo);
             client.OnMessage -= Client_OnMessage1;
             client.OnMessage += Client_OnMessage;
-            e.Message.Text = "Регистрация";
-            Client_OnMessage(sender, e);
+            
+        }
+        public static async Task<MemoryStream> RoundCorners(Image StartImage, int CornerRadius)
+        {
+            CornerRadius *= 2;
+            Bitmap RoundedImage = new Bitmap(StartImage.Width, StartImage.Height);
+            using (Graphics g = Graphics.FromImage(RoundedImage))
+            {
+                g.Clear(Color.Transparent);
+                
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                Brush brush = new TextureBrush(StartImage);
+                GraphicsPath gp = new GraphicsPath();
+                gp.AddArc(0, 0, CornerRadius, CornerRadius, 180, 90);
+                gp.AddArc(0 + RoundedImage.Width - CornerRadius, 0, CornerRadius, CornerRadius, 270, 90);
+                gp.AddArc(0 + RoundedImage.Width - CornerRadius, 0 + RoundedImage.Height - CornerRadius, CornerRadius, CornerRadius, 0, 90);
+                gp.AddArc(0, 0 + RoundedImage.Height - CornerRadius, CornerRadius, CornerRadius, 90, 90);
+                g.FillPath(brush, gp);
+                MemoryStream ms = new MemoryStream();
+                RoundedImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return ms;
+            }
         }
 
         public static async Task SendPhoto(long chatid, Stream photo)
